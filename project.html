@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script   src="http://code.jquery.com/jquery-1.8.3.js"   integrity="sha256-dW19+sSjW7V1Q/Z3KD1saC6NcE5TUIhLJzJbrdKzxKc="   crossorigin="anonymous"></script>
+<script   src="http://code.jquery.com/ui/1.8.24/jquery-ui.js"   integrity="sha256-xWbKoNW9eZkm1RodPMQHsVyql6jqeiD6IYvsGyKEW78="   crossorigin="anonymous"></script>
+<meta charset="UTF-8">
+<title>Reuben K Jacobs</title>
+<meta name="description" content="Reuben Jacobs">
+<meta name="keywords" content="Reuben, Jacobs, Reuben Jacobs">
+<link href="css/style2.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div id="wrapper"> 
+
+  <div id="header"> 
+	<select id="TSVColumns"></select>
+		
+	<input id="searchBox"></input>
+	<input type="button" id="searchButton" value="Search!"></input>
+	
+	<table border="1" id ="resultTable"><tbody></tbody></table>	
+	
+	<script>
+		
+		//necessary placeholder HTML tags are above
+		//A helper function to remove the first element, last element, and all dups
+		//from an array
+		function squash(arr){
+			var tmp = [];
+			for(var i = 0; i < arr.length; i++){
+				if(tmp.indexOf(arr[i]) == -1){
+				tmp.push(arr[i]);
+				}
+			}
+			tmp.shift();
+			tmp.pop();
+			return tmp;
+		}
+	
+		
+		//Set up some necessary variables
+		var table;
+		var TSVColumns = $("#TSVColumns");
+		
+		//Import the text file into the page via a get request
+		$.get('SoftwareProjectSampleFile.vep.txt', function(file) {
+		
+		//Split the text file based off of new lines and tab characters
+		table = file.split("\n").map(function (row) { return row.split("\t"); });
+		
+		//Grab the titles or first row of the text file
+		tableTitles = table[0];
+		
+		//Set the titles as the options in the dropdown
+		for (var i = 0; i < tableTitles.length; i++) {
+
+			TSVColumns.append($("<option></option>")
+                .attr("value",i)
+				.text(tableTitles[i])); 
+		}
+		
+		//Function to set up auto complete based off of what is selected in the drop down
+		function autoCompleteSearchBox(){
+			var searchBoxAuto = $("#searchBox");
+			var autoComplete = table.map(function (row) { return row[TSVColumns.val()]; } )
+			
+			searchBoxAuto.autocomplete();
+			searchBoxAuto.autocomplete( "option", "source", squash(autoComplete));
+			
+			searchBoxAuto.autocomplete("enable");		
+		
+		}
+		
+		//Set up the initial auto complete
+		autoCompleteSearchBox();
+		
+		//Re-set up autocomplete every time a new option is selected
+		$("#TSVColumns").change(function(){
+			autoCompleteSearchBox();		
+		});
+		
+		
+		}, 'text');
+		
+		
+		console.log(table);
+
+
+		//Functionality to search for results in the text file based off text entered
+		//in the search box and the column selected in the drop down
+		$("#searchButton").click(function(){ 
+			var resultTable = $("#resultTable > tbody");
+			resultTable.children().remove();
+			
+			var selectedOption = TSVColumns.val();
+			
+			var availableTags = table.map(function (row) { return row[selectedOption]; });
+			for (var i = 1; i < availableTags.length; i++) {
+				var searchBox = $("#searchBox").val();
+				var tag = availableTags[i];
+				if ((searchBox == tag) || (searchBox == "" && tag == "-")) {
+				
+				resultTable.append("<tr>");
+				
+				for (var j = 0; j < table[i].length; j++) {
+					resultTable.append("<td>" + table[i][j] + "</td>")
+				}
+					
+				resultTable.append("</tr>")
+					
+				}
+			}
+			
+		});		
+	</script>
+	
+  </div>
+
+</div>
+
+</body></html>
